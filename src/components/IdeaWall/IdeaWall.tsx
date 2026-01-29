@@ -198,7 +198,10 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       body: JSON.stringify({ board_id: selectedBoardId }),
     });
     if (!res.ok) {
-      const error = await res.json();
+      if (res.status === 503) {
+        throw new Error("AI not configured");
+      }
+      const error = await res.json().catch(() => ({}));
       throw new Error(error.detail || "Failed to get suggestions");
     }
     return res.json();
@@ -214,7 +217,10 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       body: JSON.stringify({ board_id: selectedBoardId }),
     });
     if (!res.ok) {
-      const error = await res.json();
+      if (res.status === 503) {
+        throw new Error("AI not configured");
+      }
+      const error = await res.json().catch(() => ({}));
       throw new Error(error.detail || "Failed to summarize");
     }
     return res.json();

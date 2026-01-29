@@ -32,9 +32,16 @@ function AIPanel({
       setSuggestions(result.suggestions);
       setActiveTab("suggestions");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to get suggestions"
-      );
+      const message =
+        err instanceof Error ? err.message : "Failed to get suggestions";
+      // Show user-friendly message for missing API key
+      if (message.includes("not configured") || message.includes("503")) {
+        setError(
+          "AI not configured. Add ANTHROPIC_API_KEY to services/api/.env"
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +55,16 @@ function AIPanel({
       setSummary(result);
       setActiveTab("summary");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to summarize");
+      const message =
+        err instanceof Error ? err.message : "Failed to summarize";
+      // Show user-friendly message for missing API key
+      if (message.includes("not configured") || message.includes("503")) {
+        setError(
+          "AI not configured. Add ANTHROPIC_API_KEY to services/api/.env"
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }

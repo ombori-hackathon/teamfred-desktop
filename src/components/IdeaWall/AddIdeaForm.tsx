@@ -43,8 +43,9 @@ function AddIdeaForm({
         const data: AITagSuggestions = await res.json();
         setSuggestedTags(data.suggested_tags);
       }
-    } catch (err) {
-      console.error("Failed to get tag suggestions:", err);
+      // Silently ignore 503 (AI not configured)
+    } catch {
+      // Silently ignore network errors for AI suggestions
     } finally {
       setIsLoadingSuggestions(false);
     }
