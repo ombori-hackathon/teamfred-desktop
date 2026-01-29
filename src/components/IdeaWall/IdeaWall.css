@@ -10,8 +10,8 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--toolbar-border);
 }
 
 .toolbar-row {
@@ -20,25 +20,55 @@
   gap: 16px;
 }
 
+.history-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.history-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-btn:hover:not(:disabled) {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.history-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .search-input {
   flex: 1;
   max-width: 300px;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 6px;
-  color: #e5e7eb;
+  color: var(--text-secondary);
   font-size: 14px;
   transition: all 0.2s;
 }
 
 .search-input::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .search-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--input-bg-focus);
   border-color: rgba(167, 139, 250, 0.5);
 }
 
@@ -70,14 +100,14 @@
   width: auto;
   padding: 4px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #e5e7eb;
+  background: var(--input-bg);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
 }
 
 .filter-btn-clear.active {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--input-bg-focus);
   border-color: transparent;
 }
 
@@ -105,14 +135,81 @@
   flex: 1;
   position: relative;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    linear-gradient(var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(135deg, var(--canvas-bg-start) 0%, var(--canvas-bg-end) 100%);
   background-size: 40px 40px, 40px 40px, 100% 100%;
   overflow: hidden;
   border-radius: 8px;
   margin: 16px;
   margin-top: 0;
+  cursor: default;
+}
+
+.idea-wall-canvas.panning {
+  cursor: grab;
+}
+
+.idea-wall-canvas.panning:active {
+  cursor: grabbing;
+}
+
+.canvas-transform-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Zoom controls */
+.zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-btn:hover {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.zoom-btn.zoom-reset {
+  font-size: 14px;
+}
+
+.zoom-level {
+  min-width: 48px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .add-idea-btn {
@@ -144,13 +241,13 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .empty-state h2 {
   font-size: 24px;
   margin-bottom: 8px;
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 .empty-state p {
@@ -162,8 +259,8 @@
   justify-content: center;
   gap: 24px;
   padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.2);
-  color: #6b7280;
+  background: var(--hints-bg);
+  color: var(--hints-text);
   font-size: 12px;
 }
 
@@ -176,8 +273,8 @@
 .keyboard-hints kbd {
   display: inline-block;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
   border-radius: 4px;
   font-family: inherit;
   font-size: 11px;

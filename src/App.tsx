@@ -1,8 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import IdeaWall from "./components/IdeaWall/IdeaWall";
 import BoardSelector from "./components/BoardSelector";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { HealthResponse, Board, BoardCreate } from "./types";
 import "./App.css";
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      className="theme-toggle"
+      onClick={toggleTheme}
+      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+    >
+      {theme === "dark" ? "☀️" : "🌙"}
+    </button>
+  );
+}
 
 const BASE_URL = "http://localhost:8001";
 
@@ -99,6 +113,7 @@ function App() {
               onDeleteBoard={handleDeleteBoard}
             />
           )}
+          <ThemeToggle />
           <div className="status">
             <span
               className={`status-dot ${apiStatus === "healthy" ? "healthy" : "offline"}`}
@@ -132,4 +147,12 @@ function App() {
   );
 }
 
-export default App;
+function AppWithProviders() {
+  return (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  );
+}
+
+export default AppWithProviders;
