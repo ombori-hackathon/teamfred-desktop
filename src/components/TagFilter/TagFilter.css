@@ -1,0 +1,173 @@
+.tag-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tag-filter-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.tag-filter-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid;
+  border-radius: 16px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+}
+
+.tag-filter-btn:hover {
+  transform: translateY(-1px);
+}
+
+.tag-filter-btn.active {
+  font-weight: 500;
+}
+
+.tag-filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.tag-filter-name {
+  color: #374151;
+}
+
+.tag-filter-delete {
+  opacity: 0;
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.tag-filter-btn:hover .tag-filter-delete {
+  opacity: 1;
+}
+
+.tag-add-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-add-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.tag-create-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.tag-color-picker {
+  display: flex;
+  gap: 2px;
+}
+
+.tag-color-option {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.tag-color-option:hover {
+  transform: scale(1.2);
+}
+
+.tag-color-option.active {
+  border-color: #1e293b;
+}
+
+.tag-create-input {
+  width: 100px;
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.tag-create-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.tag-create-submit {
+  padding: 4px 10px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tag-create-submit:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.tag-create-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tag-create-cancel {
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.tag-create-cancel:hover {
+  color: #ef4444;
+}
+
+.tag-clear-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.tag-clear-btn:hover {
+  color: #374151;
+}

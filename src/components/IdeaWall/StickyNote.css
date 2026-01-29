@@ -148,6 +148,10 @@
   border-color: rgba(0, 0, 0, 0.3);
 }
 
+.sticky-note-tags {
+  margin-bottom: 8px;
+}
+
 .sticky-note-footer {
   display: flex;
   justify-content: space-between;

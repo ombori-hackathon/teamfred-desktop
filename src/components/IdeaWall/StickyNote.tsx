@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Idea } from "../../types";
+import TagChips from "../TagChips";
 import "./StickyNote.css";
 
 interface StickyNoteProps {
@@ -15,6 +16,7 @@ interface StickyNoteProps {
   onVote: (id: number) => void;
   onDelete: (id: number) => void;
   onSelect: (id: number | null) => void;
+  onTagsChange: (id: number, tagIds: number[]) => void;
 }
 
 function StickyNote({
@@ -26,6 +28,7 @@ function StickyNote({
   onVote,
   onDelete,
   onSelect,
+  onTagsChange,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -256,6 +259,21 @@ function StickyNote({
         idea.description && (
           <p className="sticky-note-description">{idea.description}</p>
         )
+      )}
+
+      {idea.tags && idea.tags.length > 0 && (
+        <div className="sticky-note-tags">
+          <TagChips
+            tags={idea.tags}
+            size="small"
+            onRemove={(tagId) => {
+              const newTagIds = (idea.tags || [])
+                .filter((t) => t.id !== tagId)
+                .map((t) => t.id);
+              onTagsChange(idea.id, newTagIds);
+            }}
+          />
+        </div>
       )}
 
       <div className="sticky-note-footer">
