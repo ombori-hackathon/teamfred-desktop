@@ -2,10 +2,12 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "outDir": "dist-electron"
+    "esModuleInterop": true,
+    "outDir": "dist-electron",
+    "rootDir": "electron"
   },
   "include": ["electron"]
 }
