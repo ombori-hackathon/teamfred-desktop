@@ -3,7 +3,7 @@ import IdeaWall from "./components/IdeaWall/IdeaWall";
 import { HealthResponse } from "./types";
 import "./App.css";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8001";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);

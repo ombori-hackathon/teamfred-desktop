@@ -16,6 +16,9 @@ export interface Idea {
   color: "yellow" | "pink" | "blue" | "green" | "purple";
   position_x: number;
   position_y: number;
+  width: number;
+  height: number;
+  rotation: number;
   votes: number;
   created_at: string;
 }
@@ -26,4 +29,7 @@ export interface IdeaCreate {
   color: string;
   position_x: number;
   position_y: number;
+  width?: number;
+  height?: number;
+  rotation?: number;
 }
