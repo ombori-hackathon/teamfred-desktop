@@ -44,6 +44,48 @@
   }
 }
 
+@keyframes note-shuffle {
+  0%, 100% {
+    transform: translate(0, 0) rotate(var(--rotation, 0deg));
+  }
+  50% {
+    transform: translate(0, -20px) rotate(var(--rotation, 0deg));
+  }
+}
+
+@keyframes note-shake {
+  0%, 100% {
+    transform: translateX(0) rotate(var(--rotation, 0deg));
+  }
+  20%, 60% {
+    transform: translateX(-5px) rotate(var(--rotation, 0deg));
+  }
+  40%, 80% {
+    transform: translateX(5px) rotate(var(--rotation, 0deg));
+  }
+}
+
+@keyframes note-bounce {
+  0%, 100% {
+    transform: scale(1) rotate(var(--rotation, 0deg));
+  }
+  50% {
+    transform: scale(1.1) rotate(var(--rotation, 0deg));
+  }
+}
+
+.sticky-note.shuffling {
+  animation: note-shuffle 0.5s ease-out;
+}
+
+.sticky-note.shaking {
+  animation: note-shake 0.3s ease-in-out;
+}
+
+.sticky-note.bouncing {
+  animation: note-bounce 0.3s ease-out;
+}
+
 /* Color variants */
 .sticky-note.yellow {
   background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);

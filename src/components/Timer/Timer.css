@@ -1,0 +1,259 @@
+.timer-container {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+  min-width: 300px;
+  transition: all 0.3s ease;
+}
+
+.timer-container.minimized {
+  min-width: unset;
+  padding: 8px 16px;
+  cursor: move;
+  user-select: none;
+}
+
+.timer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timer-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timer-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-header-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.timer-header-button:hover {
+  background: var(--toolbar-bg);
+  color: var(--text-primary);
+}
+
+.timer-presets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.timer-preset-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.timer-preset-btn:hover {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.timer-preset-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+
+.timer-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.timer-custom-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.timer-custom-input:focus {
+  outline: none;
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.timer-ring-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.timer-ring {
+  transform: rotate(-90deg);
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: var(--toolbar-bg);
+  stroke-width: 8;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: var(--accent-color);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s linear;
+}
+
+.timer-ring-container.complete .timer-ring-progress {
+  stroke: var(--status-offline);
+  animation: pulse-ring 1s infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    stroke-width: 8;
+    opacity: 1;
+  }
+  50% {
+    stroke-width: 10;
+    opacity: 0.8;
+  }
+}
+
+.timer-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.timer-ring-container.complete .timer-display {
+  animation: pulse-text 1s infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+.timer-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-control-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.timer-control-btn.start {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+
+.timer-control-btn.start:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.timer-control-btn.pause {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: white;
+}
+
+.timer-control-btn.pause:hover {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+.timer-control-btn.reset {
+  background: var(--toolbar-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+.timer-control-btn.reset:hover {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.timer-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Minimized state */
+.timer-minimized {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.timer-minimized-time {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--text-primary);
+}
+
+.timer-minimized.complete .timer-minimized-time {
+  color: var(--status-offline);
+  animation: pulse-text 1s infinite;
+}
+
+.timer-minimized-restore {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.timer-minimized-restore:hover {
+  color: var(--text-primary);
+}

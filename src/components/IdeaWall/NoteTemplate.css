@@ -1,0 +1,62 @@
+/* Note Templates - Drag to Create */
+.note-templates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-right: 1px solid var(--toolbar-border);
+  margin-right: 12px;
+}
+
+.note-template {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: grab;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.note-template:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.note-template:active {
+  cursor: grabbing;
+}
+
+.note-template.dragging {
+  opacity: 0.5;
+  transform: scale(0.9);
+}
+
+.note-template-yellow {
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+}
+
+.note-template-pink {
+  background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+}
+
+.note-template-blue {
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+}
+
+.note-template-green {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
+}
+
+.note-template-purple {
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+}
+
+.idea-wall-canvas.drag-over {
+  background:
+    linear-gradient(var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+  box-shadow: inset 0 0 20px rgba(167, 139, 250, 0.3);
+}

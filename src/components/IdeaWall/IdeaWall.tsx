@@ -7,13 +7,24 @@ import {
   TagCreate,
   AISuggestions,
   AISummary,
+  IdeaConnection,
+  IdeaConnectionCreate,
+  IdeaGroup,
+  IdeaGroupCreate,
 } from "../../types";
 import StickyNote from "./StickyNote";
 import AddIdeaForm from "./AddIdeaForm";
 import TagFilter from "../TagFilter";
 import AIPanel from "../AIPanel";
+import NoteTemplate from "./NoteTemplate";
+import ConnectionsLayer from "./ConnectionsLayer";
+import IdeaGroupComponent from "./IdeaGroup";
+import PresentationMode from "../PresentationMode/PresentationMode";
 import { useHistory, HistoryEntry } from "../../hooks/useHistory";
 import { CanvasProvider, useCanvas } from "../../contexts/CanvasContext";
+import { useMultiSelect } from "../../hooks/useMultiSelect";
+import { useNoteAnimations } from "../../hooks/useNoteAnimations";
+import { sounds } from "../../utils/sounds";
 import "./IdeaWall.css";
 
 const BASE_URL = "http://localhost:8001";
@@ -34,13 +45,35 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [colorFilter, setColorFilter] = useState<string | null>(null);
+
+  // Presentation mode state
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [presentationSortBy] = useState<"votes" | "position" | "created">(
+    "votes"
+  );
   const [prefillTitle, setPrefillTitle] = useState<string | undefined>();
+  const [isDraggingTemplate, setIsDraggingTemplate] = useState(false);
+
+  // Connection state
+  const [connections, setConnections] = useState<IdeaConnection[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectingSourceId, setConnectingSourceId] = useState<number | null>(
+    null
+  );
+
+  // Group state
+  const [groups, setGroups] = useState<IdeaGroup[]>([]);
+  const multiSelect = useMultiSelect();
+  const [showGroupDialog, setShowGroupDialog] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const groupNameInputRef = useRef<HTMLInputElement>(null);
 
   const history = useHistory();
   const ideasRef = useRef<Idea[]>(ideas);
   ideasRef.current = ideas;
 
   const canvas = useCanvas();
+  const noteAnimations = useNoteAnimations();
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
@@ -74,6 +107,38 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
     }
   }, []);
 
+  const fetchConnections = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedBoardId !== null) {
+        params.append("board_id", selectedBoardId.toString());
+      }
+      const url = `${BASE_URL}/connections${params.toString() ? `?${params}` : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch connections");
+      const data: IdeaConnection[] = await res.json();
+      setConnections(data);
+    } catch (err) {
+      console.error("Failed to fetch connections:", err);
+    }
+  }, [selectedBoardId]);
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedBoardId !== null) {
+        params.append("board_id", selectedBoardId.toString());
+      }
+      const url = `${BASE_URL}/groups${params.toString() ? `?${params}` : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch groups");
+      const data: IdeaGroup[] = await res.json();
+      setGroups(data);
+    } catch (err) {
+      console.error("Failed to fetch groups:", err);
+    }
+  }, [selectedBoardId]);
+
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
@@ -81,6 +146,21 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
   useEffect(() => {
     fetchTags();
   }, [fetchTags]);
+
+  useEffect(() => {
+    fetchConnections();
+  }, [fetchConnections]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  // Focus group name input when dialog opens
+  useEffect(() => {
+    if (showGroupDialog && groupNameInputRef.current) {
+      groupNameInputRef.current.focus();
+    }
+  }, [showGroupDialog]);
 
   // Apply history entry (for undo/redo)
   const applyHistoryEntry = useCallback(
@@ -246,13 +326,28 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       if (e.key === "n" || e.key === "N") {
         e.preventDefault();
         setShowForm(true);
+      } else if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
+        setIsConnecting((prev) => !prev);
+        setConnectingSourceId(null);
+      } else if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        setIsPresentationMode((prev) => !prev);
+      } else if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        groupSelectedIdeas();
       } else if (e.key === "Delete" && selectedId !== null) {
         e.preventDefault();
         deleteIdea(selectedId);
       } else if (e.key === "Escape") {
         e.preventDefault();
-        setSelectedId(null);
-        setShowForm(false);
+        if (isConnecting) {
+          setIsConnecting(false);
+          setConnectingSourceId(null);
+        } else {
+          setSelectedId(null);
+          setShowForm(false);
+        }
       }
     };
 
@@ -268,7 +363,16 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
     };
-  }, [selectedId, handleUndo, handleRedo, canvas, isSpacePressed]);
+  }, [
+    selectedId,
+    handleUndo,
+    handleRedo,
+    canvas,
+    isSpacePressed,
+    isConnecting,
+    deleteIdea,
+    groupSelectedIdeas,
+  ]);
 
   // Wheel zoom handler - must use native event listener with passive: false
   useEffect(() => {
@@ -349,13 +453,29 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       setPrefillTitle(undefined);
       onBoardsChange(); // Update board idea counts
 
-      // Fire confetti!
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ["#fef08a", "#fda4af", "#93c5fd", "#86efac", "#c4b5fd"],
-      });
+      // Play create sound
+      sounds.playCreate();
+
+      // Check for milestone celebrations
+      const newCount = ideas.length + 1;
+      if ([10, 25, 50, 100].includes(newCount)) {
+        // Large celebration confetti for milestones
+        confetti({
+          particleCount: 200,
+          spread: 120,
+          origin: { y: 0.6 },
+          colors: ["#ffd700", "#ffec8b", "#ffa500"],
+        });
+        sounds.playCelebration();
+      } else {
+        // Regular confetti
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ["#fef08a", "#fda4af", "#93c5fd", "#86efac", "#c4b5fd"],
+        });
+      }
     } catch (err) {
       onError("Failed to create idea");
       console.error(err);
@@ -474,6 +594,49 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
     setShowForm(true);
   };
 
+  const createConnection = async (connectionData: IdeaConnectionCreate) => {
+    try {
+      const res = await fetch(`${BASE_URL}/connections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(connectionData),
+      });
+      if (!res.ok) throw new Error("Failed to create connection");
+      const newConnection: IdeaConnection = await res.json();
+      setConnections((prev) => [...prev, newConnection]);
+    } catch (err) {
+      onError("Failed to create connection");
+      console.error(err);
+    }
+  };
+
+  const deleteConnection = async (id: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/connections/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete connection");
+      setConnections((prev) => prev.filter((conn) => conn.id !== id));
+    } catch (err) {
+      onError("Failed to delete connection");
+      console.error(err);
+    }
+  };
+
+  const toggleConnectionMode = useCallback(() => {
+    setIsConnecting((prev) => !prev);
+    setConnectingSourceId(null);
+  }, []);
+
+  // Real-time position update during drag (for connection lines)
+  const handleDragMove = useCallback((id: number, x: number, y: number) => {
+    setIdeas((prev) =>
+      prev.map((idea) =>
+        idea.id === id ? { ...idea, position_x: x, position_y: y } : idea
+      )
+    );
+  }, []);
+
   const updatePosition = async (
     id: number,
     x: number,
@@ -569,6 +732,9 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
   };
 
   const voteIdea = async (id: number) => {
+    // Get current idea before update
+    const currentIdea = ideas.find((idea) => idea.id === id);
+
     try {
       const res = await fetch(`${BASE_URL}/ideas/${id}/vote`, {
         method: "POST",
@@ -578,6 +744,20 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       setIdeas((prev) =>
         prev.map((idea) => (idea.id === id ? updatedIdea : idea))
       );
+
+      // Play vote sound and bounce animation
+      sounds.playVote();
+      noteAnimations.bounce(id);
+
+      // Gold confetti for reaching 10+ votes
+      if (currentIdea && updatedIdea.votes >= 10 && currentIdea.votes < 10) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#ffd700", "#daa520", "#ffb347"],
+        });
+      }
     } catch (err) {
       console.error("Failed to vote:", err);
     }
@@ -594,14 +774,196 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
         setSelectedId(null);
       }
       onBoardsChange(); // Update board idea counts
+
+      // Play delete sound
+      sounds.playDelete();
     } catch (err) {
       onError("Failed to delete idea");
       console.error(err);
     }
   };
 
-  const handleSelect = (id: number | null) => {
-    setSelectedId(id);
+  // Group handlers
+  const createGroup = async (groupData: IdeaGroupCreate) => {
+    try {
+      const res = await fetch(`${BASE_URL}/groups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(groupData),
+      });
+      if (!res.ok) throw new Error("Failed to create group");
+      const newGroup: IdeaGroup = await res.json();
+      setGroups((prev) => [...prev, newGroup]);
+      await fetchIdeas();
+    } catch (err) {
+      onError("Failed to create group");
+      console.error(err);
+    }
+  };
+
+  const updateGroupPosition = async (id: number, x: number, y: number) => {
+    try {
+      await fetch(`${BASE_URL}/groups/${id}/position`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ position_x: x, position_y: y }),
+      });
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === id ? { ...g, position_x: x, position_y: y } : g
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update group position:", err);
+    }
+  };
+
+  const updateGroupSize = async (id: number, width: number, height: number) => {
+    try {
+      await fetch(`${BASE_URL}/groups/${id}/size`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ width, height }),
+      });
+      setGroups((prev) =>
+        prev.map((g) => (g.id === id ? { ...g, width, height } : g))
+      );
+    } catch (err) {
+      console.error("Failed to update group size:", err);
+    }
+  };
+
+  const toggleGroupCollapse = async (id: number) => {
+    try {
+      const group = groups.find((g) => g.id === id);
+      if (!group) return;
+      const res = await fetch(`${BASE_URL}/groups/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_collapsed: !group.is_collapsed }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle collapse");
+      const updatedGroup: IdeaGroup = await res.json();
+      setGroups((prev) => prev.map((g) => (g.id === id ? updatedGroup : g)));
+    } catch (err) {
+      console.error("Failed to toggle group collapse:", err);
+    }
+  };
+
+  const deleteGroup = async (id: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/groups/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete group");
+      setGroups((prev) => prev.filter((g) => g.id !== id));
+      await fetchIdeas();
+    } catch (err) {
+      onError("Failed to delete group");
+      console.error(err);
+    }
+  };
+
+  const handleDragGroup = (groupId: number, deltaX: number, deltaY: number) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return;
+
+    setIdeas((prev) =>
+      prev.map((idea) => {
+        if (group.idea_ids.includes(idea.id)) {
+          return {
+            ...idea,
+            position_x: idea.position_x + deltaX,
+            position_y: idea.position_y + deltaY,
+          };
+        }
+        return idea;
+      })
+    );
+
+    group.idea_ids.forEach((ideaId) => {
+      const idea = ideas.find((i) => i.id === ideaId);
+      if (idea) {
+        fetch(`${BASE_URL}/ideas/${ideaId}/position`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            position_x: idea.position_x + deltaX,
+            position_y: idea.position_y + deltaY,
+          }),
+        }).catch(console.error);
+      }
+    });
+  };
+
+  const groupSelectedIdeas = () => {
+    if (multiSelect.selectedIds.length === 0) {
+      onError("Select ideas with Ctrl+Click first");
+      return;
+    }
+    setShowGroupDialog(true);
+  };
+
+  const handleCreateGroupSubmit = async () => {
+    if (!groupName.trim()) {
+      onError("Group name is required");
+      return;
+    }
+
+    const selectedIdeas = ideas.filter((idea) =>
+      multiSelect.selectedIds.includes(idea.id)
+    );
+    if (selectedIdeas.length === 0) return;
+
+    const minX = Math.min(...selectedIdeas.map((i) => i.position_x)) - 20;
+    const minY = Math.min(...selectedIdeas.map((i) => i.position_y)) - 60;
+    const maxX =
+      Math.max(...selectedIdeas.map((i) => i.position_x + i.width)) + 20;
+    const maxY =
+      Math.max(...selectedIdeas.map((i) => i.position_y + i.height)) + 20;
+
+    const groupData: IdeaGroupCreate = {
+      name: groupName.trim(),
+      color: "#a78bfa",
+      board_id: selectedBoardId,
+      position_x: minX,
+      position_y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+      idea_ids: multiSelect.selectedIds,
+    };
+
+    await createGroup(groupData);
+    setShowGroupDialog(false);
+    setGroupName("");
+    multiSelect.clearSelection();
+  };
+
+  const handleSelect = (id: number | null, ctrlKey: boolean = false) => {
+    // If in connection mode, handle connection logic
+    if (isConnecting && id !== null) {
+      if (connectingSourceId === null) {
+        setConnectingSourceId(id);
+      } else if (connectingSourceId !== id) {
+        createConnection({
+          source_id: connectingSourceId,
+          target_id: id,
+          connection_type: "relates_to",
+        });
+        setConnectingSourceId(null);
+        setIsConnecting(false);
+      }
+      return;
+    }
+
+    // Multi-select with Ctrl
+    if (ctrlKey && id !== null) {
+      multiSelect.toggleSelect(id, true);
+      setSelectedId(null); // Clear single selection when multi-selecting
+    } else {
+      multiSelect.clearSelection();
+      setSelectedId(id);
+    }
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -612,7 +974,81 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
       (e.target as HTMLElement).classList.contains("canvas-transform-layer")
     ) {
       setSelectedId(null);
+      multiSelect.clearSelection();
+      // Exit connection mode if clicking on empty canvas
+      if (isConnecting) {
+        setIsConnecting(false);
+        setConnectingSourceId(null);
+      }
     }
+  };
+
+  // Drag-to-create handlers
+  const handleTemplateDragStart = () => {
+    setIsDraggingTemplate(true);
+  };
+
+  const handleTemplateDragEnd = () => {
+    setIsDraggingTemplate(false);
+  };
+
+  const handleCanvasDragOver = (e: React.DragEvent) => {
+    if (isDraggingTemplate) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  };
+
+  const handleCanvasDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isDraggingTemplate) return;
+
+    const color = e.dataTransfer.getData("text/plain");
+    if (!color || !COLORS.includes(color as (typeof COLORS)[number])) return;
+
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Convert screen coordinates to canvas coordinates
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    const canvasPos = canvas.screenToCanvas(screenX, screenY);
+
+    // Create idea directly at drop position with selected color
+    const rotation = Math.random() * 6 - 3;
+    const ideaData: IdeaCreate = {
+      title: "New Idea",
+      color,
+      position_x: canvasPos.x,
+      position_y: canvasPos.y,
+      rotation,
+      board_id: selectedBoardId,
+    };
+
+    try {
+      const res = await fetch(`${BASE_URL}/ideas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ideaData),
+      });
+      if (!res.ok) throw new Error("Failed to create idea");
+      const newIdea: Idea = await res.json();
+      setIdeas((prev) => [...prev, newIdea]);
+      onBoardsChange();
+
+      // Fire confetti
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ["#fef08a", "#fda4af", "#93c5fd", "#86efac", "#c4b5fd"],
+      });
+    } catch (err) {
+      onError("Failed to create idea");
+      console.error(err);
+    }
+
+    setIsDraggingTemplate(false);
   };
 
   const filteredIdeas = useMemo(() => {
@@ -670,7 +1106,51 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
             >
               ↷
             </button>
+            <button
+              className={`history-btn ${isConnecting ? "connecting-active" : ""}`}
+              onClick={toggleConnectionMode}
+              title="Connect notes (C)"
+            >
+              ⟷
+            </button>
+            <button
+              className="history-btn group-btn"
+              onClick={groupSelectedIdeas}
+              disabled={multiSelect.selectedIds.length === 0}
+              title={
+                multiSelect.selectedIds.length === 0
+                  ? "Ctrl+Click notes to select, then press G to group"
+                  : `Group ${multiSelect.selectedIds.length} selected notes (G)`
+              }
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <rect x="2" y="2" width="12" height="12" rx="2" />
+                {multiSelect.selectedIds.length > 0 && (
+                  <path
+                    d="M4.5 8L7 10.5L11.5 5.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </svg>
+              {multiSelect.selectedIds.length > 0 && (
+                <span className="selection-count">
+                  {multiSelect.selectedIds.length}
+                </span>
+              )}
+            </button>
           </div>
+          <NoteTemplate
+            onDragStart={handleTemplateDragStart}
+            onDragEnd={handleTemplateDragEnd}
+          />
           <input
             type="text"
             className="search-input"
@@ -694,6 +1174,13 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
                 title={`Filter by ${color}`}
               />
             ))}
+            <button
+              className="present-btn"
+              onClick={() => setIsPresentationMode(true)}
+              title="Present ideas (P)"
+            >
+              Present
+            </button>
           </div>
         </div>
         <TagFilter
@@ -707,9 +1194,11 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
 
       <div
         ref={canvasContainerRef}
-        className={`idea-wall-canvas ${isPanning || isSpacePressed ? "panning" : ""}`}
+        className={`idea-wall-canvas ${isPanning || isSpacePressed ? "panning" : ""} ${isConnecting ? "connecting-mode" : ""} ${isDraggingTemplate ? "drag-over" : ""}`}
         onClick={handleCanvasClick}
         onMouseDown={handleCanvasMouseDown}
+        onDragOver={handleCanvasDragOver}
+        onDrop={handleCanvasDrop}
       >
         <div
           className="canvas-transform-layer"
@@ -718,6 +1207,33 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
             transformOrigin: "0 0",
           }}
         >
+          {/* Connections layer - renders behind notes */}
+          <ConnectionsLayer
+            connections={connections}
+            ideas={filteredIdeas}
+            isConnecting={isConnecting}
+            connectingSourceId={connectingSourceId}
+            canvasWidth={10000}
+            canvasHeight={10000}
+            onDeleteConnection={deleteConnection}
+          />
+
+          {/* Render groups */}
+          {groups.map((group) => (
+            <IdeaGroupComponent
+              key={group.id}
+              group={group}
+              onPositionChange={updateGroupPosition}
+              onSizeChange={updateGroupSize}
+              onCollapse={toggleGroupCollapse}
+              onDelete={deleteGroup}
+              onDragGroup={handleDragGroup}
+              zoom={canvas.zoom}
+              panX={canvas.panX}
+              panY={canvas.panY}
+            />
+          ))}
+
           {filteredIdeas.length === 0 ? (
             <div className="empty-state">
               {ideas.length === 0 ? (
@@ -737,8 +1253,12 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
               <StickyNote
                 key={idea.id}
                 idea={idea}
-                isSelected={selectedId === idea.id}
+                isSelected={
+                  selectedId === idea.id ||
+                  multiSelect.selectedIds.includes(idea.id)
+                }
                 onPositionChange={updatePosition}
+                onDragMove={handleDragMove}
                 onSizeChange={updateSize}
                 onContentChange={updateContent}
                 onVote={voteIdea}
@@ -748,6 +1268,7 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
                 zoom={canvas.zoom}
                 panX={canvas.panX}
                 panY={canvas.panY}
+                animationClass={noteAnimations.getAnimationClass(idea.id)}
               />
             ))
           )}
@@ -792,6 +1313,9 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
           <kbd>N</kbd> New
         </span>
         <span>
+          <kbd>C</kbd> Connect
+        </span>
+        <span>
           <kbd>Ctrl+Z</kbd> Undo
         </span>
         <span>
@@ -805,6 +1329,15 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
         </span>
         <span>
           <kbd>Ctrl+0</kbd> Reset
+        </span>
+        <span>
+          <kbd>P</kbd> Present
+        </span>
+        <span>
+          <kbd>Ctrl+Click</kbd> Select
+        </span>
+        <span>
+          <kbd>G</kbd> Group
         </span>
       </div>
 
@@ -826,6 +1359,42 @@ function IdeaWall({ onError, selectedBoardId, onBoardsChange }: IdeaWallProps) {
           tags={tags}
           prefillTitle={prefillTitle}
         />
+      )}
+
+      {isPresentationMode && (
+        <PresentationMode
+          ideas={filteredIdeas}
+          onExit={() => setIsPresentationMode(false)}
+          sortBy={presentationSortBy}
+        />
+      )}
+
+      {showGroupDialog && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowGroupDialog(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Create Group</h2>
+            <input
+              ref={groupNameInputRef}
+              type="text"
+              className="group-name-input"
+              placeholder="Group name..."
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === "Enter") handleCreateGroupSubmit();
+                if (e.key === "Escape") setShowGroupDialog(false);
+              }}
+            />
+            <div className="modal-buttons">
+              <button onClick={handleCreateGroupSubmit}>Create</button>
+              <button onClick={() => setShowGroupDialog(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

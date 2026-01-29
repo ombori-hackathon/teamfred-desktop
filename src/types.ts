@@ -51,6 +51,7 @@ export interface Idea {
   created_at: string;
   board_id: number | null;
   tags: Tag[];
+  group_id: number | null;
 }
 
 export interface IdeaCreate {
@@ -78,4 +79,45 @@ export interface AISummary {
 
 export interface AITagSuggestions {
   suggested_tags: string[];
+}
+
+export interface IdeaConnection {
+  id: number;
+  source_id: number;
+  target_id: number;
+  label: string | null;
+  connection_type: "relates_to" | "depends_on" | "contradicts";
+  created_at: string;
+}
+
+export interface IdeaConnectionCreate {
+  source_id: number;
+  target_id: number;
+  label?: string;
+  connection_type?: string;
+}
+
+export interface IdeaGroup {
+  id: number;
+  name: string;
+  color: string;
+  board_id: number | null;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  is_collapsed: boolean;
+  created_at: string;
+  idea_ids: number[];
+}
+
+export interface IdeaGroupCreate {
+  name: string;
+  color?: string;
+  board_id?: number;
+  position_x?: number;
+  position_y?: number;
+  width?: number;
+  height?: number;
+  idea_ids?: number[];
 }

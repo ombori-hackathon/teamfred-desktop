@@ -131,6 +131,25 @@
   background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
 }
 
+.present-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.present-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+}
+
 .idea-wall-canvas {
   flex: 1;
   position: relative;
@@ -278,4 +297,174 @@
   border-radius: 4px;
   font-family: inherit;
   font-size: 11px;
+}
+
+/* Connection mode styles */
+.connecting-active {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%) !important;
+  color: white !important;
+  border-color: #a78bfa !important;
+}
+
+.idea-wall-canvas.connecting-mode {
+  cursor: crosshair;
+}
+
+.connections-layer {
+  pointer-events: all;
+}
+
+.connection-line {
+  transition: all 0.2s;
+}
+
+.connection-line:hover {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.connection-delete-btn {
+  transition: all 0.2s;
+}
+
+.connection-delete-btn:hover circle {
+  fill: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Multi-select and lasso */
+.sticky-note.multi-selected {
+  outline: 3px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+.lasso-selection {
+  position: absolute;
+  border: 2px dashed #a78bfa;
+  background: rgba(167, 139, 250, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Group dialog */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 300px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.group-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.group-name-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal-buttons button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.modal-buttons button:first-child {
+  background: var(--accent-color);
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background: var(--input-bg);
+  color: var(--text-secondary);
+}
+
+.modal-buttons button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.group-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.group-btn:hover:not(:disabled) {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-color);
+}
+
+.group-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.group-btn svg {
+  flex-shrink: 0;
+}
+
+.group-btn:not(:disabled) svg path {
+  stroke: var(--accent-color);
+}
+
+.selection-count {
+  background: var(--accent-color);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Drag-to-create styles */
+.idea-wall-canvas.drag-over {
+  box-shadow: inset 0 0 20px rgba(167, 139, 250, 0.3);
 }

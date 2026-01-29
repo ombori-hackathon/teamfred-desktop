@@ -1,0 +1,139 @@
+.idea-group {
+  position: absolute;
+  border: 2px dashed;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  pointer-events: all;
+  transition: box-shadow 0.2s;
+  z-index: 1;
+}
+
+.idea-group.dragging {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  cursor: grabbing;
+}
+
+.idea-group.resizing {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.idea-group.collapsed {
+  height: auto !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px 10px 0 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.group-header:active {
+  cursor: grabbing;
+}
+
+.idea-group.collapsed .group-header {
+  border-radius: 10px;
+}
+
+.group-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group-count {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.group-collapse-btn,
+.group-delete-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.group-collapse-btn:hover,
+.group-delete-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.group-delete-btn {
+  font-size: 18px;
+  font-weight: 300;
+}
+
+/* Resize handles */
+.idea-group .resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.idea-group .resize-se {
+  right: -4px;
+  bottom: -4px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.idea-group .resize-e {
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 60px;
+  cursor: ew-resize;
+}
+
+.idea-group .resize-s {
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.idea-group .resize-handle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}

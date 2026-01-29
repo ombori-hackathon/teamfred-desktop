@@ -13,6 +13,7 @@ interface StickyNoteProps {
     oldX?: number,
     oldY?: number
   ) => void;
+  onDragMove?: (id: number, x: number, y: number) => void; // Real-time position during drag
   onSizeChange: (
     id: number,
     width: number,
@@ -29,17 +30,19 @@ interface StickyNoteProps {
   ) => void;
   onVote: (id: number) => void;
   onDelete: (id: number) => void;
-  onSelect: (id: number | null) => void;
+  onSelect: (id: number | null, ctrlKey?: boolean) => void;
   onTagsChange: (id: number, tagIds: number[], oldTagIds?: number[]) => void;
   zoom?: number;
   panX?: number;
   panY?: number;
+  animationClass?: string;
 }
 
 function StickyNote({
   idea,
   isSelected,
   onPositionChange,
+  onDragMove,
   onSizeChange,
   onContentChange,
   onVote,
@@ -49,6 +52,7 @@ function StickyNote({
   zoom = 1,
   panX = 0,
   panY = 0,
+  animationClass = "",
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -68,6 +72,7 @@ function StickyNote({
   const [shadowOffset, setShadowOffset] = useState({ x: 0, y: 0 });
   const dragOffset = useRef({ x: 0, y: 0 });
   const dragStartPos = useRef({ x: 0, y: 0 });
+  const currentPosRef = useRef({ x: 0, y: 0 }); // Track current position for mouseUp
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const noteRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -98,10 +103,11 @@ function StickyNote({
     if ((e.target as HTMLElement).closest(".resize-handle")) return;
     if ((e.target as HTMLElement).closest("input, textarea")) return;
 
-    onSelect(idea.id);
+    onSelect(idea.id, e.ctrlKey);
     setIsDragging(true);
     // Capture initial position for history
     dragStartPos.current = { x: position.x, y: position.y };
+    currentPosRef.current = { x: position.x, y: position.y };
     const rect = noteRef.current?.getBoundingClientRect();
     if (rect) {
       dragOffset.current = {
@@ -200,22 +206,26 @@ function StickyNote({
       const canvasY = (screenY - panY) / zoom;
 
       // Apply drag offset (also scaled)
-      const newX = canvasX - dragOffset.current.x / zoom;
-      const newY = canvasY - dragOffset.current.y / zoom;
+      const newX = Math.max(0, canvasX - dragOffset.current.x / zoom);
+      const newY = Math.max(0, canvasY - dragOffset.current.y / zoom);
 
-      setPosition({
-        x: Math.max(0, newX),
-        y: Math.max(0, newY),
-      });
+      // Update both state and ref
+      currentPosRef.current = { x: newX, y: newY };
+      setPosition({ x: newX, y: newY });
+
+      // Notify parent for real-time updates (e.g., connection lines)
+      onDragMove?.(idea.id, newX, newY);
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      // Only record history if position actually changed
+      // Use ref for final position to avoid stale closure
+      const finalX = currentPosRef.current.x;
+      const finalY = currentPosRef.current.y;
       const startX = dragStartPos.current.x;
       const startY = dragStartPos.current.y;
-      if (position.x !== startX || position.y !== startY) {
-        onPositionChange(idea.id, position.x, position.y, startX, startY);
+      if (finalX !== startX || finalY !== startY) {
+        onPositionChange(idea.id, finalX, finalY, startX, startY);
       }
     };
 
@@ -226,18 +236,7 @@ function StickyNote({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [
-    isDragging,
-    idea.id,
-    onPositionChange,
-    position.x,
-    position.y,
-    size.width,
-    size.height,
-    zoom,
-    panX,
-    panY,
-  ]);
+  }, [isDragging, idea.id, onPositionChange, onDragMove, zoom, panX, panY]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -275,15 +274,18 @@ function StickyNote({
   return (
     <div
       ref={noteRef}
-      className={`sticky-note ${idea.color} ${isDragging ? "dragging" : ""} ${isResizing ? "resizing" : ""} ${isSelected ? "selected" : ""}`}
-      style={{
-        left: position.x,
-        top: position.y,
-        width: size.width,
-        minHeight: size.height,
-        transform: `rotate(${idea.rotation || 0}deg)`,
-        boxShadow: isDragging ? undefined : dynamicShadow,
-      }}
+      className={`sticky-note ${idea.color} ${isDragging ? "dragging" : ""} ${isResizing ? "resizing" : ""} ${isSelected ? "selected" : ""} ${animationClass}`}
+      style={
+        {
+          left: position.x,
+          top: position.y,
+          width: size.width,
+          minHeight: size.height,
+          transform: `rotate(${idea.rotation || 0}deg)`,
+          boxShadow: isDragging ? undefined : dynamicShadow,
+          "--rotation": `${idea.rotation || 0}deg`,
+        } as React.CSSProperties & { "--rotation": string }
+      }
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       onMouseMove={handleMouseMove}

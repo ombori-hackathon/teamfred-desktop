@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import IdeaWall from "./components/IdeaWall/IdeaWall";
 import BoardSelector from "./components/BoardSelector";
+import Timer from "./components/Timer/Timer";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import { HealthResponse, Board, BoardCreate } from "./types";
+import { sounds } from "./utils/sounds";
 import "./App.css";
 
 function ThemeToggle() {
@@ -18,6 +20,25 @@ function ThemeToggle() {
   );
 }
 
+function SoundToggle() {
+  const [soundEnabled, setSoundEnabled] = useState(sounds.isEnabled());
+
+  const handleToggle = () => {
+    const newState = sounds.toggle();
+    setSoundEnabled(newState);
+  };
+
+  return (
+    <button
+      className="theme-toggle"
+      onClick={handleToggle}
+      title={`Sound ${soundEnabled ? "enabled" : "disabled"}`}
+    >
+      {soundEnabled ? "🔊" : "🔇"}
+    </button>
+  );
+}
+
 const BASE_URL = "http://localhost:8001";
 
 function App() {
@@ -26,6 +47,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
+  const [showTimer, setShowTimer] = useState(false);
 
   const fetchBoards = useCallback(async () => {
     try {
@@ -99,6 +121,30 @@ function App() {
     }
   };
 
+  const toggleTimer = () => {
+    setShowTimer((prev) => !prev);
+  };
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if 'T' is pressed (without modifiers)
+      if (e.key === "t" || e.key === "T") {
+        // Only trigger if not typing in an input/textarea
+        if (
+          document.activeElement?.tagName !== "INPUT" &&
+          document.activeElement?.tagName !== "TEXTAREA"
+        ) {
+          e.preventDefault();
+          toggleTimer();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div className="app">
       <header className="header">
@@ -113,6 +159,14 @@ function App() {
               onDeleteBoard={handleDeleteBoard}
             />
           )}
+          <button
+            className="theme-toggle"
+            onClick={toggleTimer}
+            title="Toggle timer (T)"
+          >
+            🕐
+          </button>
+          <SoundToggle />
           <ThemeToggle />
           <div className="status">
             <span
@@ -143,6 +197,8 @@ function App() {
           />
         )}
       </main>
+
+      {showTimer && <Timer onClose={() => setShowTimer(false)} />}
     </div>
   );
 }
