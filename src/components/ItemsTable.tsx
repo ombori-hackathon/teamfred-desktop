@@ -1,7 +1,7 @@
-import { Item } from '../types'
+import { Item } from "../types";
 
 interface ItemsTableProps {
-  items: Item[]
+  items: Item[];
 }
 
 function ItemsTable({ items }: ItemsTableProps) {
@@ -9,10 +9,10 @@ function ItemsTable({ items }: ItemsTableProps) {
     <table className="items-table">
       <thead>
         <tr>
-          <th style={{ width: '50px' }}>ID</th>
-          <th style={{ width: '150px' }}>Name</th>
+          <th style={{ width: "50px" }}>ID</th>
+          <th style={{ width: "150px" }}>Name</th>
           <th>Description</th>
-          <th style={{ width: '80px' }}>Price</th>
+          <th style={{ width: "80px" }}>Price</th>
         </tr>
       </thead>
       <tbody>
@@ -26,7 +26,7 @@ function ItemsTable({ items }: ItemsTableProps) {
         ))}
       </tbody>
     </table>
-  )
+  );
 }
 
-export default ItemsTable
+export default ItemsTable;

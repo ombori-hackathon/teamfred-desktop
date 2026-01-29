@@ -45,11 +45,7 @@ function App() {
       </header>
 
       <main className="content">
-        {errorMessage && (
-          <div className="error-toast">
-            {errorMessage}
-          </div>
-        )}
+        {errorMessage && <div className="error-toast">{errorMessage}</div>}
         {apiStatus === "offline" ? (
           <div className="error-container">
             <span className="error-icon">Warning</span>

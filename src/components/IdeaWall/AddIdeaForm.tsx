@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { IdeaCreate } from '../../types';
-import './AddIdeaForm.css';
+import { useState } from "react";
+import { IdeaCreate } from "../../types";
+import "./AddIdeaForm.css";
 
 interface AddIdeaFormProps {
   onSubmit: (idea: IdeaCreate) => void;
   onCancel: () => void;
 }
 
-const COLORS = ['yellow', 'pink', 'blue', 'green', 'purple'] as const;
+const COLORS = ["yellow", "pink", "blue", "green", "purple"] as const;
 
 function AddIdeaForm({ onSubmit, onCancel }: AddIdeaFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [color, setColor] = useState<string>('yellow');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [color, setColor] = useState<string>("yellow");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +67,7 @@ function AddIdeaForm({ onSubmit, onCancel }: AddIdeaFormProps) {
               <button
                 key={c}
                 type="button"
-                className={`color-option ${c} ${color === c ? 'selected' : ''}`}
+                className={`color-option ${c} ${color === c ? "selected" : ""}`}
                 onClick={() => setColor(c)}
                 title={c}
               />

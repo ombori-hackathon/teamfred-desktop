@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import { Idea } from '../../types';
-import './StickyNote.css';
+import { useState, useRef, useEffect } from "react";
+import { Idea } from "../../types";
+import "./StickyNote.css";
 
 interface StickyNoteProps {
   idea: Idea;
@@ -9,9 +9,17 @@ interface StickyNoteProps {
   onDelete: (id: number) => void;
 }
 
-function StickyNote({ idea, onPositionChange, onVote, onDelete }: StickyNoteProps) {
+function StickyNote({
+  idea,
+  onPositionChange,
+  onVote,
+  onDelete,
+}: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: idea.position_x, y: idea.position_y });
+  const [position, setPosition] = useState({
+    x: idea.position_x,
+    y: idea.position_y,
+  });
   const dragOffset = useRef({ x: 0, y: 0 });
   const noteRef = useRef<HTMLDivElement>(null);
 
@@ -20,14 +28,14 @@ function StickyNote({ idea, onPositionChange, onVote, onDelete }: StickyNoteProp
   }, [idea.position_x, idea.position_y]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest("button")) return;
 
     setIsDragging(true);
     const rect = noteRef.current?.getBoundingClientRect();
     if (rect) {
       dragOffset.current = {
         x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        y: e.clientY - rect.top,
       };
     }
   };
@@ -45,7 +53,7 @@ function StickyNote({ idea, onPositionChange, onVote, onDelete }: StickyNoteProp
 
       setPosition({
         x: Math.max(0, Math.min(newX, canvasRect.width - 200)),
-        y: Math.max(0, Math.min(newY, canvasRect.height - 150))
+        y: Math.max(0, Math.min(newY, canvasRect.height - 150)),
       });
     };
 
@@ -54,19 +62,19 @@ function StickyNote({ idea, onPositionChange, onVote, onDelete }: StickyNoteProp
       onPositionChange(idea.id, position.x, position.y);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, idea.id, onPositionChange, position.x, position.y]);
 
   return (
     <div
       ref={noteRef}
-      className={`sticky-note ${idea.color} ${isDragging ? 'dragging' : ''}`}
+      className={`sticky-note ${idea.color} ${isDragging ? "dragging" : ""}`}
       style={{ left: position.x, top: position.y }}
       onMouseDown={handleMouseDown}
     >

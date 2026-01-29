@@ -13,7 +13,7 @@ export interface Idea {
   id: number;
   title: string;
   description: string | null;
-  color: 'yellow' | 'pink' | 'blue' | 'green' | 'purple';
+  color: "yellow" | "pink" | "blue" | "green" | "purple";
   position_x: number;
   position_y: number;
   votes: number;

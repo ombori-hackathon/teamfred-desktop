@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Idea, IdeaCreate } from '../../types';
-import StickyNote from './StickyNote';
-import AddIdeaForm from './AddIdeaForm';
-import './IdeaWall.css';
+import { useState, useEffect, useCallback } from "react";
+import { Idea, IdeaCreate } from "../../types";
+import StickyNote from "./StickyNote";
+import AddIdeaForm from "./AddIdeaForm";
+import "./IdeaWall.css";
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = "http://localhost:8000";
 
 interface IdeaWallProps {
   onError: (message: string) => void;
@@ -14,35 +14,35 @@ function IdeaWall({ onError }: IdeaWallProps) {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    fetchIdeas();
-  }, []);
-
-  const fetchIdeas = async () => {
+  const fetchIdeas = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/ideas`);
-      if (!res.ok) throw new Error('Failed to fetch ideas');
+      if (!res.ok) throw new Error("Failed to fetch ideas");
       const data: Idea[] = await res.json();
       setIdeas(data);
     } catch (err) {
-      onError('Failed to load ideas');
+      onError("Failed to load ideas");
       console.error(err);
     }
-  };
+  }, [onError]);
+
+  useEffect(() => {
+    fetchIdeas();
+  }, [fetchIdeas]);
 
   const createIdea = async (ideaData: IdeaCreate) => {
     try {
       const res = await fetch(`${BASE_URL}/ideas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ideaData),
       });
-      if (!res.ok) throw new Error('Failed to create idea');
+      if (!res.ok) throw new Error("Failed to create idea");
       const newIdea: Idea = await res.json();
       setIdeas((prev) => [...prev, newIdea]);
       setShowForm(false);
     } catch (err) {
-      onError('Failed to create idea');
+      onError("Failed to create idea");
       console.error(err);
     }
   };
@@ -50,39 +50,39 @@ function IdeaWall({ onError }: IdeaWallProps) {
   const updatePosition = async (id: number, x: number, y: number) => {
     try {
       await fetch(`${BASE_URL}/ideas/${id}/position`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ position_x: x, position_y: y }),
       });
     } catch (err) {
-      console.error('Failed to update position:', err);
+      console.error("Failed to update position:", err);
     }
   };
 
   const voteIdea = async (id: number) => {
     try {
       const res = await fetch(`${BASE_URL}/ideas/${id}/vote`, {
-        method: 'POST',
+        method: "POST",
       });
-      if (!res.ok) throw new Error('Failed to vote');
+      if (!res.ok) throw new Error("Failed to vote");
       const updatedIdea: Idea = await res.json();
       setIdeas((prev) =>
         prev.map((idea) => (idea.id === id ? updatedIdea : idea))
       );
     } catch (err) {
-      console.error('Failed to vote:', err);
+      console.error("Failed to vote:", err);
     }
   };
 
   const deleteIdea = async (id: number) => {
     try {
       const res = await fetch(`${BASE_URL}/ideas/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error("Failed to delete");
       setIdeas((prev) => prev.filter((idea) => idea.id !== id));
     } catch (err) {
-      onError('Failed to delete idea');
+      onError("Failed to delete idea");
       console.error(err);
     }
   };
@@ -117,7 +117,10 @@ function IdeaWall({ onError }: IdeaWallProps) {
       </button>
 
       {showForm && (
-        <AddIdeaForm onSubmit={createIdea} onCancel={() => setShowForm(false)} />
+        <AddIdeaForm
+          onSubmit={createIdea}
+          onCancel={() => setShowForm(false)}
+        />
       )}
     </div>
   );
