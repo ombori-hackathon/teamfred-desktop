@@ -1,73 +1,71 @@
-import { useState, useEffect } from 'react'
-import ItemsTable from './components/ItemsTable'
-import { Item, HealthResponse } from './types'
-import './App.css'
+import { useState, useEffect } from "react";
+import IdeaWall from "./components/IdeaWall/IdeaWall";
+import { HealthResponse } from "./types";
+import "./App.css";
 
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = "http://localhost:8000";
 
 function App() {
-  const [items, setItems] = useState<Item[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [apiStatus, setApiStatus] = useState('Checking...')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiStatus, setApiStatus] = useState("Checking...");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [])
+    checkHealth();
+  }, []);
 
-  const loadData = async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-
-    // Check health
+  const checkHealth = async () => {
     try {
-      const healthRes = await fetch(`${BASE_URL}/health`)
-      const health: HealthResponse = await healthRes.json()
-      setApiStatus(health.status)
+      const healthRes = await fetch(`${BASE_URL}/health`);
+      const health: HealthResponse = await healthRes.json();
+      setApiStatus(health.status);
+      setIsLoading(false);
     } catch {
-      setApiStatus('offline')
-      setErrorMessage('API not running')
-      setIsLoading(false)
-      return
+      setApiStatus("offline");
+      setErrorMessage("API not running");
+      setIsLoading(false);
     }
+  };
 
-    // Fetch items
-    try {
-      const itemsRes = await fetch(`${BASE_URL}/items`)
-      const data: Item[] = await itemsRes.json()
-      setItems(data)
-    } catch {
-      setErrorMessage('Failed to load items')
-    }
-
-    setIsLoading(false)
-  }
+  const handleError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(null), 3000);
+  };
 
   return (
     <div className="app">
       <header className="header">
-        <h1>teamfred</h1>
+        <h1>IdeaWall</h1>
         <div className="status">
-          <span className={`status-dot ${apiStatus === 'healthy' ? 'healthy' : 'offline'}`} />
+          <span
+            className={`status-dot ${apiStatus === "healthy" ? "healthy" : "offline"}`}
+          />
           <span className="status-text">{apiStatus}</span>
         </div>
       </header>
 
       <main className="content">
-        {errorMessage ? (
+        {errorMessage && (
+          <div className="error-toast">
+            {errorMessage}
+          </div>
+        )}
+        {apiStatus === "offline" ? (
           <div className="error-container">
             <span className="error-icon">Warning</span>
-            <p className="error-message">{errorMessage}</p>
-            <p className="error-hint">Start API: cd services/api && uv run fastapi dev</p>
+            <p className="error-message">API not running</p>
+            <p className="error-hint">
+              Start API: cd services/api && uv run fastapi dev
+            </p>
           </div>
         ) : isLoading ? (
-          <div className="loading">Loading items...</div>
+          <div className="loading">Loading...</div>
         ) : (
-          <ItemsTable items={items} />
+          <IdeaWall onError={handleError} />
         )}
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
